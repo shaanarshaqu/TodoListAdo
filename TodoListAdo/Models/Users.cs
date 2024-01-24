@@ -1,4 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
+using System;
+using TodoListAdo.Depandancies;
 
 namespace TodoListAdo.Models
 {
@@ -6,6 +8,8 @@ namespace TodoListAdo.Models
     public interface IUsers
     {
         List<UsersDTO> DisplayUsers();
+        bool Register(inputUserDTO user);
+        UsersDTO Login(inputUserDTO user);
 
     }
     public class Users: IUsers
@@ -48,6 +52,43 @@ namespace TodoListAdo.Models
 
             }
 
+        }
+
+
+        public bool Register(inputUserDTO user)
+        {
+            using(SqlConnection connect = new SqlConnection(connection_source))
+            {
+                connect.Open();
+                SqlCommand cmd = new SqlCommand("insert into Users values(@username,@password)", connect);
+                cmd.Parameters.AddWithValue("@username", user.UserName);
+                cmd.Parameters.AddWithValue("@username", user.Password);
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+        }
+
+
+
+        public UsersDTO Login(inputUserDTO user)
+        {
+            using(SqlConnection  connection = new SqlConnection(connection_source))
+            {
+                connection.Open();
+                SqlCommand cmd = new SqlCommand("select * from Users where UserName=@name and Password=@pass", connection);
+                cmd.Parameters.AddWithValue("@name", user.UserName);
+                cmd.Parameters.AddWithValue("@pass", user.Password);
+                cmd.ExecuteNonQuery();
+                SqlDataReader reader = cmd.ExecuteReader();
+                UsersDTO foundeduser=null;
+                if (reader.Read())
+                {
+                    foundeduser = new UsersDTO();
+                    foundeduser.Id= int.Parse(reader["Id"].ToString());
+                    foundeduser.UserName = reader["UserName"].ToString();
+                }
+                return foundeduser;
+            }
         }
     }
 }
